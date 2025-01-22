@@ -16,53 +16,54 @@ inflation_data = {
 }
 inflation_df = pd.DataFrame(inflation_data)
 inflation_df['Date'] = pd.to_datetime(inflation_df['Date'], format='%b-%y')
+inflation_df.set_index('Date', inplace=True)
 
 # Download stock data
 tickers = ['^CNXIT', '^NSEI']
-stock_data = yf.download(tickers, start='2023-01-01', end='2024-11-30', interval='1mo')['Adj Close']
+stock_data = yf.download(tickers, start='2023-01-01', end='2024-11-30', interval='1mo')
 
-# Merge inflation data with stock data
-merged_df = stock_data.copy()
-merged_df['Inflation'] = inflation_df.set_index('Date')['Inflation']
-merged_df.dropna(inplace=True)
+# Check the structure of the returned DataFrame
+st.write("Stock Data Structure:")
+st.write(stock_data.head())
 
-# Calculate percentage change
-merged_df['Inflation_Change'] = merged_df['Inflation'].pct_change()
-merged_df['CNXIT_Change'] = merged_df['^CNXIT'].pct_change()
-merged_df['NSEI_Change'] = merged_df['^NSEI'].pct_change()
+# Ensure 'Adj Close' column exists
+if 'Adj Close' in stock_data.columns.levels[0]:
+    stock_data = stock_data['Adj Close']
+else:
+    st.error("The 'Adj Close' column is not available in the downloaded stock data.")
+    st.stop()
 
-# Drop the first row as it contains NaN values due to pct_change()
-merged_df = merged_df.dropna()
+# Calculate percentage change for inflation and stock data
+inflation_df['Inflation_Change'] = inflation_df['Inflation'].pct_change()
+stock_data_pct_change = stock_data.pct_change()
 
-# Display the merged DataFrame
-st.write("Merged DataFrame with Inflation and Stock Data:")
-st.dataframe(merged_df)
+# Merge the dataframes
+merged_df = pd.merge(inflation_df, stock_data_pct_change, left_index=True, right_index=True, how='inner')
+
+# Plot the data
+st.write("Merged Data:")
+st.write(merged_df.head())
 
 # Correlation analysis
-correlation_matrix = merged_df[['Inflation_Change', 'CNXIT_Change', 'NSEI_Change']].corr()
+correlation_matrix = merged_df.corr()
 st.write("Correlation Matrix:")
 st.write(correlation_matrix)
 
-# Plotting
-st.write("Inflation and Stock Performance Over Time:")
-fig, ax1 = plt.subplots(figsize=(14, 7))
+# Plot correlation heatmap
+plt.figure(figsize=(10, 6))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Heatmap')
+st.pyplot(plt)
 
+# Plot trends
+fig, ax1 = plt.subplots(figsize=(10, 6))
 ax2 = ax1.twinx()
-ax1.plot(merged_df.index, merged_df['Inflation'], 'g-')
+ax1.plot(merged_df.index, merged_df['Inflation_Change'], 'g-')
 ax2.plot(merged_df.index, merged_df['^CNXIT'], 'b-')
 ax2.plot(merged_df.index, merged_df['^NSEI'], 'r-')
 
 ax1.set_xlabel('Date')
-ax1.set_ylabel('Inflation Rate', color='g')
-ax2.set_ylabel('Stock Index Value', color='b')
-
-ax1.legend(['Inflation'], loc='upper left')
-ax2.legend(['^CNXIT', '^NSEI'], loc='upper right')
-
-st.pyplot(fig)
-
-# Seaborn heatmap for correlation matrix
-st.write("Correlation Matrix Heatmap:")
-fig, ax = plt.subplots(figsize=(10, 6))
-sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', ax=ax)
+ax1.set_ylabel('Inflation Change', color='g')
+ax2.set_ylabel('Stock Change', color='b')
+plt.title('Inflation vs Stock Market Sectors')
 st.pyplot(fig)
