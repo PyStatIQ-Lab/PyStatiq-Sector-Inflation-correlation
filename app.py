@@ -68,3 +68,26 @@ st.write(merged_df)
 # Display correlation matrix
 st.subheader("Correlation Matrix")
 st.write(correlation_matrix)
+
+st.markdown("""
+    <div style="text-align: center; font-size: 14px; margin-top: 30px;">
+        <p><strong>App Code:</strong> Stock-Dividend-Prediction-Jan-2025</p>
+        <p>To get access to the stocks file to upload, please Email us at <a href="mailto:support@pystatiq.com">support@pystatiq.com</a>.</p>
+        <p>Don't forget to add the Application code.</p>
+        <p><strong>README:</strong> <a href="https://pystatiq-lab.gitbook.io/docs/python-apps/stock-dividend-predictions" target="_blank">https://pystatiq-lab.gitbook.io/docs/python-apps/stock-dividend-predictions</a></p>
+    </div>
+""", unsafe_allow_html=True)
+
+# Display Footer Logo
+st.markdown(f"""
+    <style>
+        .footer-logo {{
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 90px;
+            padding-top: 30px;
+        }}
+    </style>
+    <img class="footer-logo" src="https://predictram.com/images/logo.png" alt="Footer Logo">
+""", unsafe_allow_html=True)
